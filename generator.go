@@ -14,12 +14,10 @@ const (
 )
 
 // Generate returns a cryptographically random password of the given length.
-// The result always contains at least one character from every enabled group.
-func Generate(length int, useSpecial bool) (string, error) {
-	groups := []string{lowerChars, upperChars, digitChars}
-	if useSpecial {
-		groups = append(groups, specialChars)
-	}
+// The result always contains at least one character from every group of the
+// strategy.
+func Generate(length int, s strategy) (string, error) {
+	groups := s.groups()
 	if length < len(groups) {
 		return "", fmt.Errorf("length must be at least %d", len(groups))
 	}

@@ -7,7 +7,7 @@ import (
 
 func TestGenerateLength(t *testing.T) {
 	for _, n := range []int{4, 16, 32, 128} {
-		p, err := Generate(n, true)
+		p, err := Generate(n, strategyFull)
 		if err != nil {
 			t.Fatalf("Generate(%d): %v", n, err)
 		}
@@ -19,7 +19,7 @@ func TestGenerateLength(t *testing.T) {
 
 func TestGenerateContainsAllGroups(t *testing.T) {
 	for range 1000 {
-		p, err := Generate(4, true)
+		p, err := Generate(4, strategyFull)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -34,7 +34,7 @@ func TestGenerateContainsAllGroups(t *testing.T) {
 func TestGenerateNoSpecial(t *testing.T) {
 	allowed := lowerChars + upperChars + digitChars
 	for range 1000 {
-		p, err := Generate(32, false)
+		p, err := Generate(32, strategyAlphanum)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -49,19 +49,47 @@ func TestGenerateNoSpecial(t *testing.T) {
 	}
 }
 
+func TestGenerateDigits(t *testing.T) {
+	for _, n := range []int{1, 4, 6, 32} {
+		p, err := Generate(n, strategyDigits)
+		if err != nil {
+			t.Fatalf("Generate(%d, digits): %v", n, err)
+		}
+		if len(p) != n {
+			t.Errorf("Generate(%d, digits) returned %d chars", n, len(p))
+		}
+		if strings.Trim(p, digitChars) != "" {
+			t.Errorf("%q contains non-digits", p)
+		}
+	}
+}
+
+func TestParseStrategy(t *testing.T) {
+	for _, name := range []string{"full", "alphanum", "digits"} {
+		if s, err := parseStrategy(name); err != nil || s != strategy(name) {
+			t.Errorf("parseStrategy(%q) = %q, %v", name, s, err)
+		}
+	}
+	for _, name := range []string{"", "alnum", "Digits", "pin"} {
+		if _, err := parseStrategy(name); err == nil {
+			t.Errorf("parseStrategy(%q): expected error", name)
+		}
+	}
+}
+
 func TestGenerateTooShort(t *testing.T) {
 	cases := []struct {
-		length     int
-		useSpecial bool
+		length int
+		s      strategy
 	}{
-		{3, true},
-		{2, false},
-		{0, true},
-		{-1, false},
+		{3, strategyFull},
+		{2, strategyAlphanum},
+		{0, strategyDigits},
+		{-1, strategyFull},
 	}
 	for _, c := range cases {
-		if _, err := Generate(c.length, c.useSpecial); err == nil {
-			t.Errorf("Generate(%d, %v): expected error", c.length, c.useSpecial)
+		if _, err := Generate(c.length, c.s); err == nil {
+			t.Errorf("Generate(%d, %s): expected error", c.length, c.s)
 		}
 	}
 }
@@ -69,7 +97,7 @@ func TestGenerateTooShort(t *testing.T) {
 func TestGenerateIsRandom(t *testing.T) {
 	seen := make(map[string]bool)
 	for range 100 {
-		p, err := Generate(32, true)
+		p, err := Generate(32, strategyFull)
 		if err != nil {
 			t.Fatal(err)
 		}

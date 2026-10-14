@@ -19,7 +19,9 @@ Usage:
 
 Options:
   -l, --length N     password length (default %d)
-  -n, --no-special   exclude special characters
+  -a, --alnum        letters and digits only
+  -n, --no-newline   do not print the trailing newline
+  -c, --copy         copy the password to the clipboard
   -v, --version      print version and exit
   -h, --help         show this help
 `
@@ -27,13 +29,19 @@ Options:
 func main() {
 	var (
 		length      int
-		noSpecial   bool
+		alnum       bool
+		noNewline   bool
+		toClipboard bool
 		showVersion bool
 	)
 	flag.IntVar(&length, "l", defaultLength, "")
 	flag.IntVar(&length, "length", defaultLength, "")
-	flag.BoolVar(&noSpecial, "n", false, "")
-	flag.BoolVar(&noSpecial, "no-special", false, "")
+	flag.BoolVar(&alnum, "a", false, "")
+	flag.BoolVar(&alnum, "alnum", false, "")
+	flag.BoolVar(&noNewline, "n", false, "")
+	flag.BoolVar(&noNewline, "no-newline", false, "")
+	flag.BoolVar(&toClipboard, "c", false, "")
+	flag.BoolVar(&toClipboard, "copy", false, "")
 	flag.BoolVar(&showVersion, "v", false, "")
 	flag.BoolVar(&showVersion, "version", false, "")
 	flag.Usage = func() {
@@ -51,10 +59,22 @@ func main() {
 		return
 	}
 
-	password, err := Generate(length, !noSpecial)
+	password, err := Generate(length, !alnum)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "apg:", err)
 		os.Exit(2)
 	}
-	fmt.Println(password)
+	if noNewline {
+		fmt.Print(password)
+	} else {
+		fmt.Println(password)
+	}
+
+	if toClipboard {
+		if err := copyToClipboard(password); err != nil {
+			fmt.Fprintln(os.Stderr, "apg: copy to clipboard:", err)
+			os.Exit(1)
+		}
+		fmt.Fprintln(os.Stderr, "Copied to clipboard.")
+	}
 }

@@ -32,7 +32,9 @@ Download an archive for your platform from the
 apg [options]
 
   -l, --length N     password length (default 32)
-  -n, --no-special   exclude special characters
+  -a, --alnum        letters and digits only
+  -n, --no-newline   do not print the trailing newline
+  -c, --copy         copy the password to the clipboard
   -v, --version      print version and exit
   -h, --help         show this help
 ```
@@ -44,9 +46,14 @@ $ apg
 r9#Vq}Lm2x_TfK@8wZ!pC4n;Hs6.dYb&
 $ apg -l 16
 aT7!x;Pq2@Mz}k9R
-$ apg --length 20 --no-special
+$ apg --length 20 --alnum
 Xb4kLp9QzT2mVw7RcN5s
+$ apg -n | pbcopy   # no trailing newline in the clipboard
 ```
+
+With `--copy` the password is also put on the clipboard (`pbcopy` on macOS,
+`clip` on Windows, `wl-copy`, `xclip` or `xsel` on Linux). Keep in mind that
+clipboard managers may store it in their history.
 
 Special characters used: `` !@#$%^&*()-_=+[]{};:,.<>?/|~ ``
 

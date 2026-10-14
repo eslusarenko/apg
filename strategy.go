@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-// strategy selects which character groups a password is built from.
+// strategy is a named preset for the -M mode.
 type strategy string
 
 const (
@@ -19,33 +19,14 @@ func parseStrategy(s string) (strategy, error) {
 	return "", fmt.Errorf("unknown strategy %q (want full, alphanum or digits)", s)
 }
 
-// groups returns the character groups the strategy draws from.
-func (s strategy) groups() []string {
+// modeString returns the -M mode the strategy stands for.
+func (s strategy) modeString() string {
 	switch s {
 	case strategyAlphanum:
-		return []string{lowerChars, upperChars, digitChars}
+		return "NCL"
 	case strategyDigits:
-		return []string{digitChars}
+		return "N"
 	default:
-		return []string{lowerChars, upperChars, digitChars, specialChars}
+		return "SNCL"
 	}
-}
-
-// strategyFlag lets a strategy be set from the command line.
-type strategyFlag struct{ s *strategy }
-
-func (f strategyFlag) String() string {
-	if f.s == nil {
-		return ""
-	}
-	return string(*f.s)
-}
-
-func (f strategyFlag) Set(v string) error {
-	st, err := parseStrategy(v)
-	if err != nil {
-		return err
-	}
-	*f.s = st
-	return nil
 }

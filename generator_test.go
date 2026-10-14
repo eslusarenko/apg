@@ -5,69 +5,157 @@ import (
 	"testing"
 )
 
-func TestGenerateLength(t *testing.T) {
-	for _, n := range []int{4, 16, 32, 128} {
-		p, err := Generate(n, strategyFull)
-		if err != nil {
-			t.Fatalf("Generate(%d): %v", n, err)
-		}
-		if len(p) != n {
-			t.Errorf("Generate(%d) returned %d chars", n, len(p))
+func mustMode(t *testing.T, s string) mode {
+	t.Helper()
+	m, err := parseMode(s)
+	if err != nil {
+		t.Fatalf("parseMode(%q): %v", s, err)
+	}
+	return m
+}
+
+func mustGenerator(t *testing.T, o options) *generator {
+	t.Helper()
+	g, err := newGenerator(o)
+	if err != nil {
+		t.Fatalf("newGenerator(%+v): %v", o, err)
+	}
+	return g
+}
+
+func next(t *testing.T, g *generator) password {
+	t.Helper()
+	p, err := g.next()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+func TestParseMode(t *testing.T) {
+	m := mustMode(t, "SNcl")
+	if m.use != classSpecial|classNumber|classCapital|classSmall {
+		t.Errorf("use = %b", m.use)
+	}
+	if m.must != classSpecial|classNumber {
+		t.Errorf("must = %b", m.must)
+	}
+	for _, s := range []string{"", "X", "SNCLR", "sn c"} {
+		if _, err := parseMode(s); err == nil {
+			t.Errorf("parseMode(%q): expected error", s)
 		}
 	}
 }
 
-func TestGenerateContainsAllGroups(t *testing.T) {
-	for range 1000 {
-		p, err := Generate(4, strategyFull)
-		if err != nil {
-			t.Fatal(err)
+func TestRandomLength(t *testing.T) {
+	g := mustGenerator(t, options{algorithm: algRandom, minLen: 8, maxLen: 12, mode: mustMode(t, "SNCL")})
+	seen := map[int]bool{}
+	for range 2000 {
+		n := len(next(t, g).text)
+		if n < 8 || n > 12 {
+			t.Fatalf("length %d outside 8..12", n)
 		}
-		for _, g := range []string{lowerChars, upperChars, digitChars, specialChars} {
-			if !strings.ContainsAny(p, g) {
-				t.Fatalf("%q has no characters from %q", p, g)
+		seen[n] = true
+	}
+	if len(seen) != 5 {
+		t.Errorf("lengths seen: %v", seen)
+	}
+}
+
+func TestRandomMustClasses(t *testing.T) {
+	g := mustGenerator(t, options{algorithm: algRandom, minLen: 4, maxLen: 4, mode: mustMode(t, "SNCL")})
+	for range 1000 {
+		p := next(t, g).text
+		for _, c := range classOrder {
+			if !strings.ContainsAny(p, classSymbols[c]) {
+				t.Fatalf("%q has no %s", p, classNames[c])
 			}
 		}
 	}
 }
 
-func TestGenerateNoSpecial(t *testing.T) {
-	allowed := lowerChars + upperChars + digitChars
-	for range 1000 {
-		p, err := Generate(32, strategyAlphanum)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if strings.ContainsAny(p, specialChars) {
-			t.Fatalf("%q contains special characters", p)
-		}
-		for _, c := range p {
-			if !strings.ContainsRune(allowed, c) {
-				t.Fatalf("%q contains unexpected %q", p, c)
+func TestRandomOnlyUsedClasses(t *testing.T) {
+	cases := map[string]string{
+		"NCL": classSymbols[classNumber] + classSymbols[classCapital] + classSymbols[classSmall],
+		"N":   classSymbols[classNumber],
+		"cl":  classSymbols[classCapital] + classSymbols[classSmall],
+	}
+	for ms, allowed := range cases {
+		g := mustGenerator(t, options{algorithm: algRandom, minLen: 32, maxLen: 32, mode: mustMode(t, ms)})
+		for range 200 {
+			p := next(t, g).text
+			if strings.Trim(p, allowed) != "" {
+				t.Fatalf("-M %s: %q has unexpected characters", ms, p)
 			}
 		}
 	}
 }
 
-func TestGenerateDigits(t *testing.T) {
-	for _, n := range []int{1, 4, 6, 32} {
-		p, err := Generate(n, strategyDigits)
-		if err != nil {
-			t.Fatalf("Generate(%d, digits): %v", n, err)
-		}
-		if len(p) != n {
-			t.Errorf("Generate(%d, digits) returned %d chars", n, len(p))
-		}
-		if strings.Trim(p, digitChars) != "" {
-			t.Errorf("%q contains non-digits", p)
+func TestRandomExclude(t *testing.T) {
+	g := mustGenerator(t, options{algorithm: algRandom, minLen: 64, maxLen: 64, mode: mustMode(t, "N"), exclude: "0123"})
+	for range 200 {
+		if p := next(t, g).text; strings.ContainsAny(p, "0123") {
+			t.Fatalf("%q contains excluded characters", p)
 		}
 	}
 }
 
-func TestParseStrategy(t *testing.T) {
-	for _, name := range []string{"full", "alphanum", "digits"} {
-		if s, err := parseStrategy(name); err != nil || s != strategy(name) {
-			t.Errorf("parseStrategy(%q) = %q, %v", name, s, err)
+func TestDictionaryRejects(t *testing.T) {
+	dict := map[string]struct{}{}
+	for _, d := range "012345678" {
+		dict[string(d)] = struct{}{}
+	}
+	g := mustGenerator(t, options{algorithm: algRandom, minLen: 1, maxLen: 1, mode: mustMode(t, "N"), dict: dict})
+	for range 100 {
+		if p := next(t, g).text; p != "9" {
+			t.Fatalf("got %q, want 9", p)
+		}
+	}
+
+	dict["9"] = struct{}{}
+	g = mustGenerator(t, options{algorithm: algRandom, minLen: 1, maxLen: 1, mode: mustMode(t, "N"), dict: dict})
+	if _, err := g.next(); err == nil {
+		t.Error("expected an error when every password is in the dictionary")
+	}
+}
+
+func TestNewGeneratorErrors(t *testing.T) {
+	cases := map[string]options{
+		"bad algorithm":   {algorithm: 2, minLen: 8, maxLen: 8, mode: mustMode(t, "SNCL")},
+		"zero length":     {algorithm: algRandom, minLen: 0, maxLen: 0, mode: mustMode(t, "SNCL")},
+		"too short":       {algorithm: algRandom, minLen: 3, maxLen: 3, mode: mustMode(t, "SNCL")},
+		"must excluded":   {algorithm: algRandom, minLen: 8, maxLen: 8, mode: mustMode(t, "NL"), exclude: "0123456789"},
+		"nothing left":    {algorithm: algRandom, minLen: 8, maxLen: 8, mode: mustMode(t, "n"), exclude: "0123456789"},
+		"pron no capital": {algorithm: algPronounceable, minLen: 8, maxLen: 8, mode: mustMode(t, "Cl"), exclude: classSymbols[classCapital]},
+	}
+	for name, o := range cases {
+		if _, err := newGenerator(o); err == nil {
+			t.Errorf("%s: expected error", name)
+		}
+	}
+}
+
+func TestRandomIsRandom(t *testing.T) {
+	g := mustGenerator(t, options{algorithm: algRandom, minLen: 32, maxLen: 32, mode: mustMode(t, "SNCL")})
+	seen := map[string]bool{}
+	for range 100 {
+		p := next(t, g).text
+		if seen[p] {
+			t.Fatalf("duplicate password %q", p)
+		}
+		seen[p] = true
+	}
+}
+
+func TestStrategies(t *testing.T) {
+	want := map[string]string{"full": "SNCL", "alphanum": "NCL", "digits": "N"}
+	for name, ms := range want {
+		st, err := parseStrategy(name)
+		if err != nil {
+			t.Fatalf("parseStrategy(%q): %v", name, err)
+		}
+		if st.modeString() != ms {
+			t.Errorf("%s: mode %q, want %q", name, st.modeString(), ms)
 		}
 	}
 	for _, name := range []string{"", "alnum", "Digits", "pin"} {
@@ -77,33 +165,15 @@ func TestParseStrategy(t *testing.T) {
 	}
 }
 
-func TestGenerateTooShort(t *testing.T) {
-	cases := []struct {
-		length int
-		s      strategy
-	}{
-		{3, strategyFull},
-		{2, strategyAlphanum},
-		{0, strategyDigits},
-		{-1, strategyFull},
+func TestSpell(t *testing.T) {
+	if got, want := spell("aB1!"), "alfa-Bravo-ONE-EXCLAMATION_POINT"; got != want {
+		t.Errorf("spell = %q, want %q", got, want)
 	}
-	for _, c := range cases {
-		if _, err := Generate(c.length, c.s); err == nil {
-			t.Errorf("Generate(%d, %s): expected error", c.length, c.s)
+	for _, s := range classSymbols {
+		for i := 0; i < len(s); i++ {
+			if spell(s[i:i+1]) == "" {
+				t.Errorf("no spelling for %q", s[i])
+			}
 		}
-	}
-}
-
-func TestGenerateIsRandom(t *testing.T) {
-	seen := make(map[string]bool)
-	for range 100 {
-		p, err := Generate(32, strategyFull)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if seen[p] {
-			t.Fatalf("duplicate password %q", p)
-		}
-		seen[p] = true
 	}
 }

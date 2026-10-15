@@ -1,0 +1,24 @@
+#compdef apg
+
+_arguments -s \
+  '-a[algorithm]:algorithm:((0\:pronounceable 1\:random))' \
+  '-M[symbol classes (S N C L; upper case: must contain)]:mode:(SNCL sncl NCL ncl N)' \
+  '-E[exclude characters]:characters:' \
+  '-n[number of passwords]:count:' \
+  '-m[minimum length]:length:' \
+  '-x[maximum length]:length:' \
+  '-r[reject passwords found in a dictionary file]:file:_files' \
+  '-t[print pronunciation]' \
+  '-l[spell out passwords]' \
+  '(-d --no-newline)'{-d,--no-newline}'[no newline after each password]' \
+  '-q[quiet mode]' \
+  '-s[ignored, for compatibility]' \
+  '-c[ignored, for compatibility]:seed:' \
+  '(- *)'{-v,--version}'[print version]' \
+  '(- *)'{-h,--help}'[show help]' \
+  '--length[exact password length]:length:' \
+  '--strategy[character set]:strategy:(full alphanum digits)' \
+  '--alnum[letters and digits only]' \
+  '--digits[digits only]' \
+  '--pin[digits only, for PIN codes]' \
+  '(-C --copy)'{-C,--copy}'[copy to the clipboard]'

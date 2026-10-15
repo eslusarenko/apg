@@ -1,0 +1,22 @@
+# fish completion for apg
+
+complete -c apg -f
+complete -c apg -o a -x -a '0\t"pronounceable" 1\t"random"' -d 'Algorithm'
+complete -c apg -o M -x -a 'SNCL sncl NCL ncl N' -d 'Symbol classes (S N C L; upper case: must contain)'
+complete -c apg -o E -x -d 'Exclude characters'
+complete -c apg -o n -x -d 'Number of passwords'
+complete -c apg -o m -x -d 'Minimum length'
+complete -c apg -o x -x -d 'Maximum length'
+complete -c apg -o r -r -F -d 'Reject passwords found in a dictionary file'
+complete -c apg -o t -d 'Print pronunciation'
+complete -c apg -o l -d 'Spell out passwords'
+complete -c apg -o d -l no-newline -d 'No newline after each password'
+complete -c apg -o q -d 'Quiet mode'
+complete -c apg -o v -l version -d 'Print version'
+complete -c apg -o h -l help -d 'Show help'
+complete -c apg -l length -x -d 'Exact password length'
+complete -c apg -l strategy -x -a 'full alphanum digits' -d 'Character set'
+complete -c apg -l alnum -d 'Letters and digits only'
+complete -c apg -l digits -d 'Digits only'
+complete -c apg -l pin -d 'Digits only, for PIN codes'
+complete -c apg -s C -l copy -d 'Copy to the clipboard'

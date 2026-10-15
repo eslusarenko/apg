@@ -1,5 +1,9 @@
 # apg — Advanced Password Generator
 
+[![CI](https://github.com/eslusarenko/apg/actions/workflows/ci.yml/badge.svg)](https://github.com/eslusarenko/apg/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/eslusarenko/apg)](https://github.com/eslusarenko/apg/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 A command-line password generator inspired by
 [apg, the Automated Password Generator](https://github.com/wilx/apg) by
 Adel I. Mirzazhanov — a long-time Linux favourite that is missing from
@@ -10,7 +14,10 @@ pronounceable passwords, and adds what makes everyday use simpler:
 strong defaults, PIN codes, copying to the clipboard and a config file.
 It is a single binary with no dependencies for macOS, Linux and Windows.
 
+![apg demo](docs/demo.gif)
+
 It is a new implementation in Go, not affiliated with the original project.
+Website: <https://eslusarenko.github.io/apg/>
 
 ## Install
 
@@ -19,6 +26,9 @@ It is a new implementation in Go, not affiliated with the original project.
 ```sh
 brew install eslusarenko/tap/apg
 ```
+
+This also installs the man page (`man apg`) and completions for bash, zsh
+and fish.
 
 ### Go
 
@@ -159,6 +169,11 @@ ignored. Command-line options take precedence over the file.
 go test ./...
 go build
 ```
+
+The demo GIF is recorded with [vhs](https://github.com/charmbracelet/vhs):
+`go build -o demo/bin/apg . && vhs demo/demo.tape`.
+
+Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Releasing
 

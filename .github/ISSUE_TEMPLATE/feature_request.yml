@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest an option or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need
+      description: The task you want to solve, and how you would like to run apg for it.
+    validations:
+      required: true
+  - type: textarea
+    id: classic
+    attributes:
+      label: Classic apg
+      description: If the classic apg can do this, how?

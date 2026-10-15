@@ -1,0 +1,175 @@
+.TH APG 1 "October 15, 2026" "apg" "User Commands"
+.SH NAME
+apg \- Advanced Password Generator
+.SH SYNOPSIS
+.B apg
+[\fB\-a\fR \fI0|1\fR]
+[\fB\-M\fR \fImode\fR]
+[\fB\-E\fR \fIchars\fR]
+[\fB\-n\fR \fIcount\fR]
+[\fB\-m\fR \fImin\fR]
+[\fB\-x\fR \fImax\fR]
+[\fB\-r\fR \fIfile\fR]
+[\fB\-t\fR]
+[\fB\-l\fR]
+[\fB\-d\fR]
+[\fB\-q\fR]
+[\fB\-\-length\fR \fIN\fR]
+[\fB\-\-strategy\fR \fIname\fR]
+[\fB\-\-alnum\fR]
+[\fB\-\-pin\fR]
+[\fB\-C\fR]
+.SH DESCRIPTION
+.B apg
+generates strong passwords: random ones or pronounceable ones built with the
+FIPS-181 algorithm. Its options follow the classic apg (Automated Password
+Generator) by Adel I. Mirzazhanov, with a few extensions.
+.PP
+Without options apg prints one random 32-character password made of upper and
+lower case letters, digits and special characters. Every random choice comes
+from the operating system's cryptographic random generator.
+.SH OPTIONS
+.SS Options of the classic apg
+.TP
+.BI \-a " 0|1"
+Algorithm: 0 builds pronounceable passwords (FIPS-181), 1 picks random
+characters. Default: 1.
+.TP
+.BI \-M " mode"
+Symbol classes to use:
+.B S
+special symbols,
+.B N
+numbers,
+.B C
+capital letters,
+.B L
+small letters. An upper case letter means every password must contain the
+class, a lower case letter means it may. Default: SNCL.
+.TP
+.BI \-E " chars"
+Exclude these characters, for example look-alikes such as
+.BR O0Il1| .
+.TP
+.BI \-n " count"
+Number of passwords to generate. Default: 1.
+.TP
+.BI \-m " min"
+Minimum password length. Default: 32.
+.TP
+.BI \-x " max"
+Maximum password length. Default: 32. If it is less than the minimum, the
+minimum is used.
+.TP
+.BI \-r " file"
+Reject passwords found in a dictionary file, one word per line.
+.TP
+.B \-t
+Print the pronunciation of pronounceable passwords.
+.TP
+.B \-l
+Spell out generated passwords, for example
+.B aB1!
+as
+.BR alfa-Bravo-ONE-EXCLAMATION_POINT .
+.TP
+.B \-d
+Do not print a newline after each password.
+.TP
+.B \-q
+Quiet mode: do not print warnings.
+.TP
+.BI \-s ", " \-c " seed"
+Random seed options. Accepted for compatibility and ignored.
+.TP
+.BR \-v ", " \-\-version
+Print the version and exit.
+.TP
+.BR \-h ", " \-\-help
+Show a summary of the options.
+.SS Extensions
+.TP
+.BI \-\-length " N"
+Exact password length, same as
+.BI \-m " N " \-x " N" .
+.TP
+.BI \-\-strategy " name"
+.B full
+(\-M SNCL),
+.B alphanum
+(\-M NCL) or
+.B digits
+(\-M N).
+.TP
+.B \-\-alnum
+Same as
+.BR "\-\-strategy alphanum" .
+.TP
+.BR \-\-digits ", " \-\-pin
+Same as
+.BR "\-\-strategy digits" ,
+for PIN codes.
+.TP
+.B \-\-no\-newline
+Same as
+.BR \-d .
+.TP
+.BR \-C ", " \-\-copy
+Copy the generated passwords to the clipboard with pbcopy (macOS), clip
+(Windows), or wl-copy, xclip or xsel (Linux).
+.PP
+When several strategy or
+.B \-M
+options are given, the last one wins. Short options cannot be combined:
+write
+.BR "\-d \-l" ,
+not
+.BR \-dl .
+.SH FILES
+.TP
+.I ~/.apg.conf
+Default settings, one
+.I key=value
+per line; blank lines and lines starting with # are ignored. Command-line
+options take precedence.
+.RS
+.TP
+.BI default_length= N
+Password length when no length option is given.
+.TP
+.BI default_strategy= name
+.BR full ,
+.B alphanum
+or
+.BR digits .
+.RE
+.SH EXIT STATUS
+0 on success, 1 if passwords could not be generated or copied, 2 on invalid
+options or configuration.
+.SH EXAMPLES
+.TP
+.B apg
+One random 32-character password.
+.TP
+.B apg \-a 0 \-n 6 \-m 8 \-x 10 \-M sncl
+Six pronounceable passwords, like the classic apg prints by default.
+.TP
+.B apg \-\-pin \-\-length 6
+A six-digit PIN code.
+.TP
+.B apg \-E 'O0Il1|' \-\-length 16 \-C
+A 16-character password without look-alike characters, copied to the
+clipboard.
+.TP
+.B apg \-d | pbcopy
+A password without a trailing newline.
+.SH DIFFERENCES FROM THE CLASSIC APG
+Defaults differ (see above). Bloom filter checks
+.RB ( \-b ", " \-p ),
+crypt(3) output
+.RB ( \-y )
+and cracklib checks
+.RB ( \-k )
+are not supported; apg exits with an error instead of skipping a check.
+.SH SEE ALSO
+https://github.com/eslusarenko/apg

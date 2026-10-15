@@ -20,6 +20,8 @@ archives:
       - README.md
       - LICENSE
       - NOTICE
+      - man/apg.1
+      - completions/*
 
 checksum:
   name_template: checksums.txt
@@ -39,7 +41,13 @@ homebrew_casks:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: https://github.com/eslusarenko/apg
-    description: Generate strong random passwords
+    description: Password generator compatible with the classic apg
+    manpages:
+      - man/apg.1
+    completions:
+      bash: completions/apg.bash
+      zsh: completions/_apg
+      fish: completions/apg.fish
     license: MIT
     commit_author:
       name: goreleaserbot

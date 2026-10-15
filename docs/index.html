@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>apg — Advanced Password Generator</title>
+<meta name="description" content="A command-line password generator for macOS, Linux and Windows. The options of the classic Linux apg, FIPS-181 pronounceable passwords, PIN codes and clipboard copy. Install with Homebrew.">
+<link rel="canonical" href="https://eslusarenko.github.io/apg/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://eslusarenko.github.io/apg/">
+<meta property="og:title" content="apg — Advanced Password Generator">
+<meta property="og:description" content="The classic apg, back on macOS: strong passwords, FIPS-181 pronounceable passwords, PIN codes and clipboard copy from the command line.">
+<meta property="og:image" content="https://eslusarenko.github.io/apg/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e1e2e'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%23a6e3a1' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --text: #1d1d27;
+  --muted: #5c5f73;
+  --border: #e3e4ec;
+  --accent: #2f7d4a;
+  --accent-soft: #e5f3e9;
+  --code-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --code-prompt: #a6e3a1;
+  --code-comment: #7f849c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12121a;
+    --surface: #1a1a25;
+    --text: #e6e6f0;
+    --muted: #9ea1b5;
+    --border: #2c2c3c;
+    --accent: #7fd39a;
+    --accent-soft: #1d3326;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12121a;
+  --surface: #1a1a25;
+  --text: #e6e6f0;
+  --muted: #9ea1b5;
+  --border: #2c2c3c;
+  --accent: #7fd39a;
+  --accent-soft: #1d3326;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+a { color: var(--accent); }
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+
+header.top { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+.logo { font-weight: 700; font-size: 20px; text-decoration: none; color: var(--text); }
+.logo span { color: var(--accent); }
+nav a { margin-left: 16px; color: var(--muted); text-decoration: none; font-size: 15px; }
+nav a:hover { color: var(--text); }
+
+.hero { padding: 48px 0 32px; text-align: center; }
+.hero h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.1; margin: 0 0 16px; letter-spacing: -0.02em; }
+.hero p.lead { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 640px; margin: 0 auto 32px; }
+
+.install {
+  display: inline-flex; align-items: center; gap: 12px; max-width: 100%;
+  background: var(--code-bg); color: var(--code-text);
+  border-radius: 10px; padding: 12px 12px 12px 18px; font-size: 16px;
+}
+.install code { white-space: nowrap; overflow-x: auto; min-width: 0; }
+.install code::before { content: "$ "; color: var(--code-prompt); }
+.copy {
+  flex: none; border: 1px solid #45475a; background: #313244; color: var(--code-text);
+  border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.copy:hover { background: #45475a; }
+.alt { color: var(--muted); font-size: 15px; margin-top: 14px; }
+.alt code { font-size: 14px; }
+
+.demo { margin: 40px auto 0; max-width: 820px; }
+.demo img { width: 100%; height: auto; display: block; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+
+section { padding: 56px 0 8px; }
+section h2 { font-size: 28px; margin: 0 0 24px; letter-spacing: -0.01em; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+.card code { font-size: 14px; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+
+pre.term {
+  background: var(--code-bg); color: var(--code-text); border-radius: 12px;
+  padding: 20px; overflow-x: auto; font-size: 14.5px; line-height: 1.55; margin: 0;
+}
+.term .p { color: var(--code-prompt); }
+.term .c { color: var(--code-comment); }
+
+.classic { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.classic p { margin-top: 0; color: var(--muted); }
+.classic code, .card code { white-space: nowrap; }
+.classic ul { padding-left: 20px; color: var(--muted); margin: 0; }
+.classic li { margin-bottom: 6px; }
+@media (max-width: 760px) { .classic { grid-template-columns: minmax(0, 1fr); } }
+
+footer { margin-top: 64px; padding: 28px 0 40px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14.5px; }
+footer p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="./"><span>&gt;_</span> apg</a>
+    <nav>
+      <a href="https://github.com/eslusarenko/apg#usage">Docs</a>
+      <a href="https://github.com/eslusarenko/apg/releases">Releases</a>
+      <a href="https://github.com/eslusarenko/apg">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h1>Strong passwords,<br>straight from the terminal</h1>
+    <p class="lead">apg is the classic Linux password generator, reimplemented for macOS, Linux and Windows. Same options, sensible defaults, and a few things that make everyday use simpler.</p>
+    <div class="install"><code id="cmd">brew install eslusarenko/tap/apg</code><button class="copy" id="copy" type="button">Copy</button></div>
+    <p class="alt">or <code>go install github.com/eslusarenko/apg@latest</code>, or grab a <a href="https://github.com/eslusarenko/apg/releases/latest">binary</a></p>
+    <div class="demo"><img src="demo.gif" width="1000" height="470" alt="Terminal session: apg prints a random password, alphanumeric passwords, pronounceable passwords with pronunciation, a PIN code, and copies a password to the clipboard"></div>
+  </div>
+
+  <section>
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card"><h3>Strong by default</h3><p>Plain <code>apg</code> prints a 32-character password of letters, digits and symbols. No options to remember.</p></div>
+      <div class="card"><h3>Pronounceable passwords</h3><p>The FIPS-181 algorithm from the original apg: <code>apg -a 0 -t</code> gives words like <code>RytJugHus</code> you can read aloud.</p></div>
+      <div class="card"><h3>PIN codes</h3><p><code>apg --pin --length 6</code> for a six-digit code, <code>--alnum</code> when a site rejects symbols.</p></div>
+      <div class="card"><h3>Straight to the clipboard</h3><p><code>--copy</code> uses pbcopy, clip, wl-copy or xclip. <code>-d</code> drops the trailing newline for pipes.</p></div>
+      <div class="card"><h3>Your defaults</h3><p>Set <code>default_length</code> and <code>default_strategy</code> once in <code>~/.apg.conf</code>.</p></div>
+      <div class="card"><h3>Cryptographically random</h3><p>Every character comes straight from the system's cryptographic random generator, chosen uniformly.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Familiar if you used apg on Linux</h2>
+    <div class="classic">
+      <div>
+        <p>The options of the classic apg by Adel I. Mirzazhanov keep their meaning: <code>-a</code>, <code>-M</code>, <code>-E</code>, <code>-n</code>, <code>-m</code>, <code>-x</code>, <code>-r</code>, <code>-t</code>, <code>-l</code> and the rest. Your scripts and muscle memory keep working.</p>
+        <ul>
+          <li>The defaults are stronger: one random 32-character password instead of six short pronounceable ones.</li>
+          <li>Bloom filter, crypt(3) and cracklib options are not supported, and apg says so instead of silently skipping a check.</li>
+          <li><code>man apg</code> and shell completions for bash, zsh and fish come with the Homebrew package.</li>
+        </ul>
+      </div>
+<pre class="term"><span class="c"># the classic apg defaults</span>
+<span class="p">$</span> apg -a 0 -n 4 -m 8 -x 10 -M sncl
+TedceOf~
+liavAndead
+vobbyQuir
+nadUcWouv
+
+<span class="c"># no look-alike characters</span>
+<span class="p">$</span> apg -E 'O0Il1|' --length 16
+2#S._4$,SzGv2^tp
+
+<span class="c"># spelled out for reading over the phone</span>
+<span class="p">$</span> apg -m 8 -x 8 -l
+A4c[up6d Alfa-FOUR-charlie-LEFT_BRACKET-uniform-papa-SIX-delta</pre>
+    </div>
+  </section>
+
+  <footer>
+    <p>apg is open source under the <a href="https://github.com/eslusarenko/apg/blob/master/LICENSE">MIT license</a>. The pronounceable generator is ported from the classic <a href="https://github.com/wilx/apg">apg</a> by Adel I. Mirzazhanov under its BSD license.</p>
+    <p>A new implementation in Go, not affiliated with the original project.</p>
+  </footer>
+</div>
+<script>
+document.getElementById('copy').addEventListener('click', function () {
+  var btn = this;
+  var text = document.getElementById('cmd').textContent;
+  var done = function (label) { btn.textContent = label; setTimeout(function () { btn.textContent = 'Copy'; }, 1500); };
+  try {
+    navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Press ⌘C'); });
+  } catch (e) { done('Press ⌘C'); }
+});
+</script>
+</body>
+</html>
